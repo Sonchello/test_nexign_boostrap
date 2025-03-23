@@ -12,12 +12,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Сервис для генерации отчетов по данным UDR генерирует
+ * отчеты по входящим и исходящим звонкам для абонента за указанный месяц или за весь период.
+ */
 @Service
 public class UdrService {
 
     @Autowired
     private CdrRepository cdrRepository;
 
+    /**
+     * Генерация отчета по звонкам для указанного абонента за определенный месяц
+     *  включает данные о времени всех входящих и исходящих звонков
+     * @param msisdn номер телефона абонента
+     * @param month  месяц, за который генерируется отчет
+     */
     public UdrReport generateUdrReport(String msisdn, Integer month) {
         List<CdrRecord> incomingCalls = filterCallsByMonth(cdrRepository.findByToMsisdn(msisdn), month);
         List<CdrRecord> outcomingCalls = filterCallsByMonth(cdrRepository.findByFromMsisdn(msisdn), month);
@@ -42,6 +52,10 @@ public class UdrService {
 
         return udrReport;
     }
+
+    /**
+     * Генерация отчетов по всем абонентам за определенный месяц (или за все время, если месяц не указан)
+     */
     public Map<String, UdrReport> generateAllUdrReports(Integer month) {
         List<CdrRecord> allCalls = month != null ?
                 cdrRepository.findAll().stream()
@@ -80,6 +94,9 @@ public class UdrService {
         return reports;
     }
 
+    /**
+     * Фильтрация звонков по месяцу, если месяц не указан, возвращаются все звонки.
+     */
     private List<CdrRecord> filterCallsByMonth(List<CdrRecord> calls, Integer month) {
         if (month == null) {
             return calls;
@@ -89,6 +106,9 @@ public class UdrService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Формирование длительности в строку формата "hh:mm:ss".
+     */
     private String formatDuration(long seconds) {
         long hours = seconds / 3600;
         long minutes = (seconds % 3600) / 60;
@@ -96,6 +116,9 @@ public class UdrService {
         return String.format("%02d:%02d:%02d", hours, minutes, secs);
     }
 
+    /**
+     * Преобразование строкового представления длительности в секунды.
+     */
     private long parseDuration(String duration) {
         if (duration == null || duration.isEmpty()) {
             return 0;
